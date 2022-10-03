@@ -1,12 +1,13 @@
 import os
+from sre_parse import CATEGORIES
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
-
 from models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
+
 
 def create_app(test_config=None):
     # create and configure the app
@@ -16,30 +17,31 @@ def create_app(test_config=None):
     """
     @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     """
-    
+
     CORS(app)
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     """
     @TODO: Use the after_request decorator to set Access-Control-Allow
     """
-    
+
     @app.after_request
     def after_request(response):
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization, true")
-        
-        response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
-        
+        response.headers.add("Access-Control-Allow-Headers",
+                             "Content-Type,Authorization, true")
+
+        response.headers.add("Access-Control-Allow-Methods",
+                             "GET,PUT,POST,DELETE,OPTIONS")
+
         response.headers.add("Access-Control-Allow-Origin", "*")
-        
+
         return response
-    
+
     """
     @TODO:
     Create an endpoint to handle GET requests
     for all available categories.
     """
-
 
     """
     @TODO:
@@ -53,6 +55,37 @@ def create_app(test_config=None):
     ten questions per page and pagination at the bottom of the screen for three pages.
     Clicking on the page numbers should update the questions.
     """
+
+    @app.route('/questions')
+    def get_all_questions():
+        try:
+            page = request.args.get("page", 1, type=int)
+            start = (page-1) * QUESTIONS_PER_PAGE
+            end = start + QUESTIONS_PER_PAGE
+
+            questions = Question.query.order_by(Question.id).all()
+            print(questions)
+            len_questions = len(questions)
+            categories = Category.query.all()
+            formatted_category = {}
+            for category in categories:
+                formatted_category[category.id] = category.type
+            # formatted_category = [a.format() for a in categories]
+
+            page_questions = questions[start:end]
+            formatted_page_question = [a.format() for a in page_questions]
+            
+            
+
+            return jsonify({
+                'success': True,
+                'questions': formatted_page_question,
+                'total_questions': len_questions,
+                'categories': formatted_category
+            })
+        except Exception as e:
+            print(e)
+            abort(400)
 
     """
     @TODO:
@@ -112,4 +145,3 @@ def create_app(test_config=None):
     """
 
     return app
-
