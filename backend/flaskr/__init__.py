@@ -42,6 +42,20 @@ def create_app(test_config=None):
     Create an endpoint to handle GET requests
     for all available categories.
     """
+    @app.route('/categories')
+    def get_all_categories():
+        try:
+            categories = Category.query.all()
+            formatted_category = {}
+            for category in categories:
+                formatted_category[category.id] = category.type
+
+            return jsonify({
+                'categories': formatted_category
+            })
+        except Exception as e:
+            print(e)
+            abort(400)
 
     """
     @TODO:
@@ -74,8 +88,6 @@ def create_app(test_config=None):
 
             page_questions = questions[start:end]
             formatted_page_question = [a.format() for a in page_questions]
-            
-            
 
             return jsonify({
                 'success': True,
@@ -105,6 +117,26 @@ def create_app(test_config=None):
     the form will clear and the question will appear at the end of the last page
     of the questions list in the "List" tab.
     """
+    @app.route('/questions', methods=['POST'])
+    def post_new_questions():
+        body = request.get_json()
+
+        question_new = body.get('question')
+        answer_new = body.get('answer')
+        difficulty_new = body.get('difficulty')
+        category_new = body.get('category')
+
+        try:
+            post_row_question = Question(
+                question=question_new, answer=answer_new, category=category_new, difficulty=difficulty_new)
+            post_row_question.insert()
+            return jsonify({
+                'success': True,
+                'question': question_new
+            })
+        except Exception as e:
+            print(e)
+            abort(400)
 
     """
     @TODO:
