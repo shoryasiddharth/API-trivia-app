@@ -15,14 +15,14 @@ def create_app(test_config=None):
     setup_db(app)
 
     """
-    @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
+    Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     """
 
     CORS(app)
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     """
-    @TODO: Use the after_request decorator to set Access-Control-Allow
+    The after_request decorator to set Access-Control-Allow
     """
 
     @app.after_request
@@ -38,8 +38,7 @@ def create_app(test_config=None):
         return response
 
     """
-    @TODO:
-    Create an endpoint to handle GET requests
+    An endpoint to handle GET requests
     for all available categories.
     """
     @app.route('/categories')
@@ -58,8 +57,7 @@ def create_app(test_config=None):
             abort(400)
 
     """
-    @TODO:
-    Create an endpoint to handle GET requests for questions,
+    An endpoint to handle GET requests for questions,
     including pagination (every 10 questions).
     This endpoint should return a list of questions,
     number of total questions, current category, categories.
@@ -99,20 +97,17 @@ def create_app(test_config=None):
             abort(400)
 
     """
-    @TODO:
-    Create an endpoint to DELETE question using a question ID.
-
+    An endpoint to DELETE question using a question ID
     TEST: When you click the trash icon next to a question, the question will be removed.
     This removal will persist in the database and when you refresh the page.
     """
     @app.route('/questions/<int:question_id>', methods=['DELETE'])
     def delete_question(question_id):
-        
+
         try:
 
             question = Question.query.filter_by(id=question_id).one_or_none()
             question.delete()
-            
 
             return jsonify({
                 'success': True,
@@ -122,8 +117,7 @@ def create_app(test_config=None):
             abort(404)
 
     """
-    @TODO:
-    Create an endpoint to POST a new question,
+    An endpoint to POST a new question,
     which will require the question and answer text,
     category, and difficulty score.
 
@@ -164,14 +158,26 @@ def create_app(test_config=None):
     """
 
     """
-    @TODO:
-    Create a GET endpoint to get questions based on category.
+    A GET endpoint to get questions based on category.
 
     TEST: In the "List" tab / main screen, clicking on one of the
     categories in the left column will cause only questions of that
     category to be shown.
     """
-
+    @app.route('/categories/<int:id>/questions', methods=['GET'])
+    def get_ques_by_categories(id):
+        category = Category.query.filter_by(id=id).one_or_none()
+        if category:
+            # retrive all questions in a category
+            questions_in_Category = Question.query.filter_by(category=str(id)).all()
+            formatted_page_question = [a.format() for a in questions_in_Category]
+            
+            return jsonify({
+                'success': True,
+                'questions': formatted_page_question,
+                'total_questions': len(formatted_page_question),
+                'current_category': category.type
+            })
     """
     @TODO:
     Create a POST endpoint to get questions to play the quiz.
@@ -185,9 +191,40 @@ def create_app(test_config=None):
     """
 
     """
-    @TODO:
-    Create error handlers for all expected errors
+    Error handlers for all expected errors
     including 404 and 422.
     """
+
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+            "success": False,
+            'error': 400,
+            "message": "Bad request"
+        }), 400
+
+    @app.errorhandler(404)
+    def page_not_found(error):
+        return jsonify({
+            "success": False,
+            'error': 404,
+            "message": "Page not found"
+        }), 404
+
+    @app.errorhandler(422)
+    def unprocessable_recource(error):
+        return jsonify({
+            "success": False,
+            'error': 422,
+            "message": "Unprocessable recource"
+        }), 422
+
+    @app.errorhandler(500)
+    def internal_server_error(error):
+        return jsonify({
+            "success": False,
+            'error': 500,
+            "message": "Internal server error"
+        }), 500
 
     return app
