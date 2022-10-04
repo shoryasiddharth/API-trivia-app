@@ -50,6 +50,7 @@ def create_app(test_config=None):
                 formatted_category[category.id] = category.type
 
             return jsonify({
+                'success': True,
                 'categories': formatted_category
             })
         except Exception as e:
@@ -84,6 +85,8 @@ def create_app(test_config=None):
             # formatted_category = [a.format() for a in categories]
 
             page_questions = questions[start:end]
+            if (len(page_questions) == 0):
+                abort(404)
             formatted_page_question = [a.format() for a in page_questions]
 
             return jsonify({
@@ -107,11 +110,15 @@ def create_app(test_config=None):
         try:
 
             question = Question.query.filter_by(id=question_id).one_or_none()
-            question.delete()
+            if (question):
 
-            return jsonify({
-                'success': True,
-            })
+                question.delete()
+
+                return jsonify({
+                    'success': True,
+                })
+            else:
+                abort(404)
         except Exception as e:
             print(e)
             abort(404)
@@ -144,7 +151,7 @@ def create_app(test_config=None):
             })
         except Exception as e:
             print(e)
-            abort(400)
+            abort(422)
 
     """
     A POST endpoint to get questions based on a search term.
@@ -204,9 +211,11 @@ def create_app(test_config=None):
                     'total_questions': len(formatted_page_question),
                     'current_category': category.type
                 })
+            else:
+                abort(404)
         except Exception as e:
             print(e)
-            abort(400)
+            abort(404)
     """
     A POST endpoint to get questions to play the quiz.
     This endpoint should take category and previous question parameters
@@ -243,7 +252,7 @@ def create_app(test_config=None):
                     },
                     'previousQuestion': previousQuestion
                 })
-            
+
         except Exception as e:
             print(e)
             abort(404)
