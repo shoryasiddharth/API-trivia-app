@@ -50,7 +50,6 @@ def create_app(test_config=None):
                 formatted_category[category.id] = category.type
 
             return jsonify({
-                'success': True,
                 'categories': formatted_category
             })
         except Exception as e:

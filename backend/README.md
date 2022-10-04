@@ -48,12 +48,7 @@ flask run --reload
 
 The `--reload` flag will detect file changes and restart the server automatically.
 
-## To Do Tasks
-
-These are the files you'd want to edit in the backend:
-
-1. `backend/flaskr/__init__.py`
-2. `backend/test_flaskr.py`
+## Tasks
 
 One note before you delve into your tasks: for each endpoint, you are expected to define the endpoint and response data. The frontend will be a plentiful resource because it is set up to expect certain endpoints and response data formats already. You should feel free to specify endpoints in your own way; if you do so, make sure to update the frontend or you will get some unexpected behavior.
 
@@ -69,10 +64,6 @@ One note before you delve into your tasks: for each endpoint, you are expected t
 
 ## Documenting your Endpoints
 
-You will need to provide detailed documentation of your API endpoints including the URL, request parameters, and the response body. Use the example below as a reference.
-
-### Documentation Example
-
 `GET '/api/v1.0/categories'`
 
 - Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
@@ -87,6 +78,101 @@ You will need to provide detailed documentation of your API endpoints including 
   "4": "History",
   "5": "Entertainment",
   "6": "Sports"
+}
+```
+
+`GET '/api/v1.0/categories'`
+
+- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
+- Request Arguments: None
+- Returns: An object with a key, `success`, that contains True if the request was fulfilled and a few others - 
+
+```json
+{
+    "success": True,
+    "questions": [{
+                    "id": 5,
+                    "question": "Art",
+                    "answer": "Geography",
+                    "difficulty": 4,
+                    "caetgory": 4
+                }, .....],
+    "total_questions": 1,
+    "categories": {
+                    "1": "Science",
+                    "2": "Art",
+                    "3": "Geography",
+                    "4": "History",
+                    "5": "Entertainment",
+                    "6": "Sports"
+                  }
+}
+```
+
+`DELETE '/api/v1.0//questions/<int:question_id>'`
+
+- An endpoint to DELETE question using a question ID
+- Request Arguments: None
+- Returns: 
+
+```json
+{
+  "success": True,
+}
+```
+
+`POST '/api/v1.0//questions'`
+
+- An endpoint to POST a new question, which will require the question and answer text, category, and difficulty score
+- Request Arguments: - 
+```json
+{
+  "question": "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?",
+  "answer": "Muhammad Ali",
+  "difficulty": 4,
+  "category": 2,
+}
+```
+- Returns:-
+
+```json
+{
+  "success": True,
+  "question": "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?"
+}
+```
+
+`POST '/api/v1.0/search-questions'`
+
+- A POST endpoint to get questions based on a search term. It should return any questions for whom the search term is a substring of the question.
+- Request Arguments: - 
+```json
+{ 
+  "searchTerm": "searchTerm" 
+}
+```
+- Returns:-
+
+```json
+{
+  "success": True,
+  "questions": [array of json for each question data],
+  "total_questions": 100
+}
+```
+
+`GET '/api/v1.0/categories/<int:id>/questions'`
+
+- A GET endpoint to get questions based on category.
+- Request Arguments: - Since a GET request we pick the id of the category from the request URL
+- Returns: -
+
+```json
+{
+  "success": True,
+  "questions": [array of json for each question data],
+  "total_questions": 100,
+  "current_category": "Art"
 }
 ```
 
