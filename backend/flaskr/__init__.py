@@ -147,8 +147,7 @@ def create_app(test_config=None):
             abort(400)
 
     """
-    @TODO:
-    Create a POST endpoint to get questions based on a search term.
+    A POST endpoint to get questions based on a search term.
     It should return any questions for whom the search term
     is a substring of the question.
 
@@ -156,6 +155,30 @@ def create_app(test_config=None):
     only question that include that string within their question.
     Try using the word "title" to start.
     """
+
+    @app.route('/search-questions', methods=['POST'])
+    def get_ques_by_searchTerm():
+        try:
+            body = request.get_json()
+
+            searchTerm = body.get('searchTerm')
+
+            questions = Question.query.filter(
+                Question.question.ilike('%'+searchTerm+'%')).all()
+            if questions:
+                formatted_page_question = [a.format()
+                                           for a in questions]
+                return jsonify({
+                    'success': True,
+                    'questions': formatted_page_question,
+                    'total_questions': len(formatted_page_question)
+                })
+            else:
+                abort(404)
+
+        except Exception as e:
+            print(e)
+            abort(400)
 
     """
     A GET endpoint to get questions based on category.
@@ -166,21 +189,26 @@ def create_app(test_config=None):
     """
     @app.route('/categories/<int:id>/questions', methods=['GET'])
     def get_ques_by_categories(id):
-        category = Category.query.filter_by(id=id).one_or_none()
-        if category:
-            # retrive all questions in a category
-            questions_in_Category = Question.query.filter_by(category=str(id)).all()
-            formatted_page_question = [a.format() for a in questions_in_Category]
-            
-            return jsonify({
-                'success': True,
-                'questions': formatted_page_question,
-                'total_questions': len(formatted_page_question),
-                'current_category': category.type
-            })
+        try:
+            category = Category.query.filter_by(id=id).one_or_none()
+            if category:
+                # retrive all questions in a category
+                questions_in_Category = Question.query.filter_by(
+                    category=str(id)).all()
+                formatted_page_question = [a.format()
+                                           for a in questions_in_Category]
+
+                return jsonify({
+                    'success': True,
+                    'questions': formatted_page_question,
+                    'total_questions': len(formatted_page_question),
+                    'current_category': category.type
+                })
+        except Exception as e:
+            print(e)
+            abort(400)
     """
-    @TODO:
-    Create a POST endpoint to get questions to play the quiz.
+    A POST endpoint to get questions to play the quiz.
     This endpoint should take category and previous question parameters
     and return a random questions within the given category,
     if provided, and that is not one of the previous questions.
@@ -189,6 +217,36 @@ def create_app(test_config=None):
     one question at a time is displayed, the user is allowed to answer
     and shown whether they were correct or not.
     """
+    @app.route('/quizzes', methods=['POST'])
+    def get_quiz():
+        body = request.get_json()
+        quizCategory = body.get('quiz_category')
+        previousQuestion = body.get('previous_questions')
+        try:
+            if (quizCategory['id'] == 0):
+                questionsQuery = Question.query.all()
+            else:
+                questionsQuery = Question.query.filter_by(
+                    category=quizCategory['id']).all()
+            randomIndex = random.randint(0, len(questionsQuery)-1)
+            nextQuestion = questionsQuery[randomIndex]
+            while nextQuestion.id not in previousQuestion:
+                nextQuestion = questionsQuery[randomIndex]
+                return jsonify({
+                    'success': True,
+                    'question': {
+                        "answer": nextQuestion.answer,
+                        "category": nextQuestion.category,
+                        "difficulty": nextQuestion.difficulty,
+                        "id": nextQuestion.id,
+                        "question": nextQuestion.question
+                    },
+                    'previousQuestion': previousQuestion
+                })
+            
+        except Exception as e:
+            print(e)
+            abort(404)
 
     """
     Error handlers for all expected errors
