@@ -75,23 +75,26 @@ def create_app(test_config=None):
             start = (page-1) * QUESTIONS_PER_PAGE
             end = start + QUESTIONS_PER_PAGE
 
-            questions = Question.query.order_by(Question.id).all()
-            len_questions = len(questions)
+            questions = Question.query.all()
             categories = Category.query.all()
             formatted_category = {}
             for category in categories:
                 formatted_category[category.id] = category.type
             # formatted_category = [a.format() for a in categories]
 
-            page_questions = questions[start:end]
+            if end > len(questions):
+                page_questions = questions[start:]
+            else:
+                page_questions = questions[start:end]
             if (len(page_questions) == 0):
                 abort(404)
             formatted_page_question = [a.format() for a in page_questions]
-
+            # print( formatted_category)
+            # print(formatted_page_question)
             return jsonify({
                 'success': True,
                 'questions': formatted_page_question,
-                'total_questions': len_questions,
+                'total_questions': len(questions),
                 'categories': formatted_category
             })
         except Exception as e:
@@ -169,18 +172,15 @@ def create_app(test_config=None):
 
             searchTerm = body.get('searchTerm')
 
-            questions = Question.query.filter(
-                Question.question.ilike('%'+searchTerm+'%')).all()
-            if questions:
-                formatted_page_question = [a.format()
-                                           for a in questions]
-                return jsonify({
-                    'success': True,
-                    'questions': formatted_page_question,
-                    'total_questions': len(formatted_page_question)
-                })
-            else:
+            questions = Question.query.filter(Question.question.ilike('%'+searchTerm+'%')).all()
+            if questions is None:
                 abort(404)
+            formatted_page_question = [a.format() for a in questions]
+            return jsonify({
+                'success': True,
+                'questions': formatted_page_question,
+                'total_questions': len(formatted_page_question)
+            })
 
         except Exception as e:
             print(e)
@@ -197,21 +197,19 @@ def create_app(test_config=None):
     def get_ques_by_categories(id):
         try:
             category = Category.query.filter_by(id=id).one_or_none()
-            if category:
-                # retrive all questions in a category
-                questions_in_Category = Question.query.filter_by(
-                    category=str(id)).all()
-                formatted_page_question = [a.format()
-                                           for a in questions_in_Category]
-
-                return jsonify({
-                    'success': True,
-                    'questions': formatted_page_question,
-                    'total_questions': len(formatted_page_question),
-                    'current_category': category.type
-                })
-            else:
+            if category is None:
                 abort(404)
+                
+            # retrive all questions in a category
+            questions_in_Category = Question.query.filter_by(category=id).all()
+            formatted_page_question = [a.format() for a in questions_in_Category]
+
+            return jsonify({
+                'success': True,
+                'questions': formatted_page_question,
+                'total_questions': len(formatted_page_question),
+                'current_category': category.type
+            })
         except Exception as e:
             print(e)
             abort(404)
@@ -228,29 +226,32 @@ def create_app(test_config=None):
     @app.route('/quizzes', methods=['POST'])
     def get_quiz():
         body = request.get_json()
-        quizCategory = body.get('quiz_category')
-        previousQuestion = body.get('previous_questions')
+        quiz_category = body.get('quiz_category')
+        previous_questions = body.get('previous_questions')
         try:
-            if (quizCategory['id'] == 0):
-                questionsQuery = Question.query.all()
+            if (quiz_category['id'] == 0):
+                questions = Question.query.all()
             else:
-                questionsQuery = Question.query.filter_by(
-                    category=quizCategory['id']).all()
-            randomIndex = random.randint(0, len(questionsQuery)-1)
-            nextQuestion = questionsQuery[randomIndex]
-            while nextQuestion.id not in previousQuestion:
-                nextQuestion = questionsQuery[randomIndex]
-                return jsonify({
-                    'success': True,
-                    'question': {
-                        "answer": nextQuestion.answer,
-                        "category": nextQuestion.category,
-                        "difficulty": nextQuestion.difficulty,
-                        "id": nextQuestion.id,
-                        "question": nextQuestion.question
-                    },
-                    'previousQuestion': previousQuestion
-                })
+                questions = Question.query.filter_by(
+                    category=quiz_category['id']).all()
+            all_ques_id_not_asked = [i.id for i in questions]
+            for i in previous_questions:
+                all_ques_id_not_asked.remove(i)
+                
+            next_question_id = random.choice(all_ques_id_not_asked)
+            next_question = Question.query.filter_by(id=next_question_id).one_or_none()
+            print(all_ques_id_not_asked)
+            return jsonify({
+                'success': True,
+                'question': {
+                    "answer": next_question.answer,
+                    "category": next_question.category,
+                    "difficulty": next_question.difficulty,
+                    "id": next_question.id,
+                    "question": next_question.question
+                },
+                'previousQuestion': previous_questions
+            })
 
         except Exception as e:
             print(e)
